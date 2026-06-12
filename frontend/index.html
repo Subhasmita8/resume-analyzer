@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeIQ — AI Resume Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon" aria-hidden="true">◈</span>
+        <span class="logo-text">ResumeIQ</span>
+      </div>
+      <p class="header-tagline">Match your resume to any job description in seconds</p>
+    </div>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="main-layout">
+
+    <!-- Left panel: inputs -->
+    <section class="panel panel--input" aria-label="Input panel">
+
+      <!-- Step 1: Upload -->
+      <div class="input-group">
+        <label class="group-label" for="resumeFile">
+          <span class="step-badge">1</span>
+          Upload Resume
+        </label>
+        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Upload resume PDF or DOCX">
+          <input type="file" id="resumeFile" accept=".pdf,.docx" hidden />
+          <div class="drop-zone__idle" id="dropIdle">
+            <svg class="drop-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M24 4L24 32M24 4L16 12M24 4L32 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 36V40C8 42.2 9.8 44 12 44H36C38.2 44 40 42.2 40 40V36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <p class="drop-primary">Drop your resume here</p>
+            <p class="drop-secondary">or <button type="button" class="inline-link" id="browseBtn">browse files</button></p>
+            <p class="drop-hint">PDF or DOCX · max 5 MB</p>
+          </div>
+          <div class="drop-zone__selected hidden" id="dropSelected">
+            <span class="file-icon" aria-hidden="true">📄</span>
+            <span class="file-name" id="fileName"></span>
+            <button type="button" class="remove-file" id="removeFile" aria-label="Remove file">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Job Description -->
+      <div class="input-group">
+        <label class="group-label" for="jobDescription">
+          <span class="step-badge">2</span>
+          Job Description
+        </label>
+        <textarea
+          id="jobDescription"
+          class="jd-textarea"
+          placeholder="Paste the full job description here…"
+          rows="10"
+          aria-label="Job description"
+          spellcheck="false"
+        ></textarea>
+        <p class="char-count" id="charCount">0 characters</p>
+      </div>
+
+      <!-- Submit -->
+      <button type="button" class="btn-analyze" id="analyzeBtn" disabled>
+        <span class="btn-text">Analyze Resume</span>
+        <span class="btn-arrow" aria-hidden="true">→</span>
+      </button>
+
+      <!-- Error banner -->
+      <div class="error-banner hidden" id="errorBanner" role="alert">
+        <span class="error-icon" aria-hidden="true">⚠</span>
+        <span id="errorMessage"></span>
+      </div>
+
+    </section>
+
+    <!-- Right panel: results -->
+    <section class="panel panel--results" id="resultsPanel" aria-label="Analysis results" aria-live="polite">
+
+      <!-- Loading state -->
+      <div class="loading-state hidden" id="loadingState">
+        <div class="spinner" aria-label="Analyzing…">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <p class="loading-text">Analyzing your resume…</p>
+        <p class="loading-sub">Running NLP pipeline</p>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-illustration" aria-hidden="true">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="15" width="80" height="90" rx="6" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <line x1="35" y1="40" x2="85" y2="40" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <line x1="35" y1="55" x2="85" y2="55" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <line x1="35" y1="70" x2="65" y2="70" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <circle cx="90" cy="88" r="18" fill="currentColor" opacity="0.08" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <path d="M83 88 L88 93 L97 83" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <p class="empty-title">Your analysis will appear here</p>
+        <p class="empty-body">Upload a resume and paste a job description to get your match score, skill gaps, and tailored suggestions.</p>
+      </div>
+
+      <!-- Results content -->
+      <div class="results-content hidden" id="resultsContent">
+
+        <!-- Score card -->
+        <div class="score-card" id="scoreCard">
+          <div class="score-left">
+            <p class="score-label">Match Score</p>
+            <div class="score-display">
+              <span class="score-value" id="scoreValue">0</span>
+              <span class="score-unit">%</span>
+            </div>
+            <p class="score-verdict" id="scoreVerdict"></p>
+          </div>
+          <div class="score-right">
+            <div class="score-ring-wrap">
+              <svg class="score-ring" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-bg" cx="60" cy="60" r="50"/>
+                <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"
+                  stroke-dasharray="314.16"
+                  stroke-dashoffset="314.16"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matching keywords -->
+        <div class="result-block" id="matchBlock">
+          <h2 class="block-title">
+            <span class="block-icon" aria-hidden="true">✓</span>
+            Matching Keywords
+            <span class="count-badge" id="matchCount">0</span>
+          </h2>
+          <div class="keyword-cloud" id="matchingKeywords"></div>
+        </div>
+
+        <!-- Missing skills -->
+        <div class="result-block" id="missingBlock">
+          <h2 class="block-title">
+            <span class="block-icon block-icon--warn" aria-hidden="true">!</span>
+            Missing Skills
+            <span class="count-badge count-badge--warn" id="missingCount">0</span>
+          </h2>
+          <div class="keyword-cloud" id="missingSkills"></div>
+          <p class="missing-note hidden" id="missingNote">No skill gaps detected — great alignment!</p>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="result-block" id="suggestionsBlock">
+          <h2 class="block-title">
+            <span class="block-icon block-icon--tip" aria-hidden="true">→</span>
+            How to Improve
+          </h2>
+          <ul class="suggestion-list" id="suggestionList"></ul>
+        </div>
+
+        <!-- Re-analyze -->
+        <button type="button" class="btn-reanalyze" id="reanalyzeBtn">
+          ← Analyze another resume
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer">
+    <p>Built with Flask · spaCy · scikit-learn · PyPDF2</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
