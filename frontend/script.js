@@ -11,7 +11,7 @@
 "use strict";
 
 /* ── Config ── */
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://resume-analyzer-909p.onrender.com";
 
 /* ── DOM references ── */
 const dropZone        = document.getElementById("dropZone");
